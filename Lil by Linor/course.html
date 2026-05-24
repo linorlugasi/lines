@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>קורס עיצוב גבות | Lil by Linor</title>
+    <style>
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Regular.ttf') format('truetype'); font-weight:400; }
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Bold.ttf') format('truetype'); font-weight:700; }
+
+        :root {
+            --paper:#F0E4C0; --ink:#1A0C04; --ink-mid:#3D2210;
+            --sepia:#6B4418; --gold:#9B7530; --rule:#7A5420;
+        }
+        *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Miriam Libre','David',serif;
+            background:var(--paper); color:var(--ink);
+            min-height:100vh; padding:32px 16px 60px;
+        }
+        body::after {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity:0.045;
+        }
+        .wrapper { max-width:580px; margin:0 auto; }
+
+        .back-btn { background:none; border:none; font-family:inherit; font-size:13px; color:var(--sepia); letter-spacing:1px; cursor:pointer; margin-bottom:20px; opacity:0.7; transition:opacity .2s; padding:0; }
+        .back-btn:hover { opacity:1; }
+
+        /* masthead */
+        .masthead { text-align:center; border-top:3px double var(--rule); border-bottom:3px double var(--rule); padding:16px 0 14px; margin-bottom:28px; position:relative; }
+        .masthead::before,.masthead::after { content:''; position:absolute; left:0; right:0; height:1px; background:var(--rule); opacity:.3; }
+        .masthead::before { top:5px; } .masthead::after { bottom:5px; }
+        .masthead-logo { width:68px; height:auto; margin:0 auto 10px; display:block; filter:drop-shadow(0 3px 8px rgba(100,60,10,.2)); }
+        .masthead-title { font-size:22px; font-weight:700; letter-spacing:3px; }
+        .masthead-sub { font-size:10px; letter-spacing:4px; color:var(--sepia); margin-top:6px; }
+
+        /* section divider */
+        .sdiv { display:flex; align-items:center; gap:8px; margin:26px 0 16px; }
+        .sdiv-line { flex:1; height:1px; background:var(--rule); opacity:.5; }
+        .sdiv-dot { width:4px; height:4px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
+        .sdiv-title { font-size:10px; letter-spacing:4px; color:var(--sepia); white-space:nowrap; padding:0 4px; }
+
+        /* about text */
+        .about-text {
+            font-size:14px; line-height:2; color:var(--ink-mid);
+            border-right:3px solid var(--rule); padding-right:16px;
+            margin-bottom:20px;
+        }
+
+        /* course highlights */
+        .highlights { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
+        .highlight-card {
+            border:1px solid rgba(122,84,32,.4); padding:16px 14px;
+            text-align:center;
+        }
+        .highlight-icon { font-size:22px; margin-bottom:6px; }
+        .highlight-title { font-size:12px; font-weight:700; letter-spacing:2px; margin-bottom:4px; }
+        .highlight-desc { font-size:11px; color:var(--sepia); letter-spacing:1px; line-height:1.6; }
+
+        /* syllabus */
+        .syllabus { border:1px solid rgba(122,84,32,.3); margin-bottom:8px; }
+        .syllabus-item {
+            display:flex; align-items:baseline; gap:16px;
+            padding:13px 16px;
+            border-bottom:1px solid rgba(122,84,32,.15);
+            transition:background .15s;
+        }
+        .syllabus-item:last-child { border-bottom:none; }
+        .syllabus-item:hover { background:rgba(122,84,32,.04); }
+        .syl-num {
+            font-size:10px; letter-spacing:2px; color:var(--gold);
+            font-weight:700; flex-shrink:0; min-width:22px;
+        }
+        .syl-text { font-size:13px; color:var(--ink-mid); line-height:1.6; letter-spacing:.5px; }
+
+        /* hero image */
+        .hero-wrap {
+            position:relative; width:100%;
+            aspect-ratio:1/1;
+            overflow:hidden;
+            margin-bottom:8px;
+            border:1px solid rgba(122,84,32,.3);
+        }
+        .hero-wrap img {
+            width:100%; height:100%; object-fit:cover; object-position:center top;
+            display:block;
+            animation: fadeInPhoto 1.8s ease both;
+        }
+        .hero-wrap::after {
+            content:'';
+            position:absolute; inset:0;
+            background: linear-gradient(to bottom,
+                transparent 55%,
+                rgba(240,228,192,.6) 80%,
+                rgba(240,228,192,.95) 100%);
+        }
+        @keyframes fadeInPhoto {
+            from { opacity:0; transform:scale(1.04); }
+            to   { opacity:1; transform:scale(1); }
+        }
+
+        /* gallery */
+        .gallery {
+            display:grid; grid-template-columns:1fr 1fr 1fr;
+            gap:0; margin-bottom:8px;
+            border:1px solid rgba(122,84,32,.35);
+        }
+        .gallery-item {
+            border-left:1px solid rgba(122,84,32,.35);
+            border-bottom:1px solid rgba(122,84,32,.35);
+        }
+        .gallery-item:nth-child(3n+1) { border-left:none; }
+        .gallery-item:nth-last-child(-n+3) { border-bottom:none; }
+        .gallery-item {
+            aspect-ratio:1/1;
+            overflow:hidden; position:relative;
+            background:rgba(122,84,32,.08);
+        }
+        .gallery-item img {
+            width:100%; height:100%;
+            object-fit:cover; object-position:center top;
+            display:block;
+            animation: fadeInPhoto 1.4s ease both;
+            transition: transform .4s ease;
+        }
+        .gallery-item:hover img { transform:scale(1.04); }
+        .gallery-item::after {
+            content:'';
+            position:absolute; inset:0;
+            background: linear-gradient(to bottom,
+                transparent 50%,
+                rgba(240,228,192,.35) 80%,
+                rgba(240,228,192,.75) 100%);
+            pointer-events:none;
+        }
+
+        /* form */
+        .form-card {
+            border:3px double var(--rule); padding:28px 24px;
+            margin-top:8px; position:relative;
+        }
+        .form-card::before,.form-card::after { content:''; position:absolute; left:8px; right:8px; height:1px; background:var(--rule); opacity:.25; }
+        .form-card::before { top:8px; } .form-card::after { bottom:8px; }
+        .form-title { font-size:16px; font-weight:700; letter-spacing:2px; text-align:center; margin-bottom:6px; }
+        .form-subtitle { font-size:11px; letter-spacing:2px; color:var(--sepia); text-align:center; margin-bottom:22px; }
+        .field { margin-bottom:16px; }
+        .field label { font-size:10px; letter-spacing:3px; color:var(--sepia); display:block; margin-bottom:7px; }
+        .field input {
+            width:100%; border:none; border-bottom:1px solid var(--rule);
+            background:transparent; font-family:inherit; font-size:15px;
+            color:var(--ink); padding:6px 0; outline:none;
+            transition:border-color .2s;
+        }
+        .field input:focus { border-color:var(--ink); }
+        .submit-btn {
+            width:100%; background:var(--ink); color:var(--paper);
+            border:2px solid var(--ink); padding:14px;
+            font-family:inherit; font-size:14px; font-weight:700;
+            letter-spacing:4px; cursor:pointer; transition:background .2s;
+            margin-top:6px;
+        }
+        .submit-btn:hover { background:var(--sepia); border-color:var(--sepia); }
+        .submit-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+        /* success */
+        .success-box { display:none; text-align:center; padding:32px 20px; border:3px double var(--rule); }
+        .success-box.show { display:block; }
+        .success-big { font-size:40px; color:var(--gold); margin-bottom:10px; }
+        .success-title { font-size:18px; font-weight:700; letter-spacing:2px; margin-bottom:8px; }
+        .success-text { font-size:13px; color:var(--sepia); line-height:1.9; letter-spacing:1px; }
+
+        .bottom-rule { border-top:3px double var(--rule); margin-top:32px; padding-top:10px; text-align:center; font-size:9px; letter-spacing:3px; color:var(--sepia); opacity:.6; }
+
+        @media(max-width:480px) {
+            .highlights { grid-template-columns:1fr; }
+            .gallery { grid-template-columns:1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← חזרה</button>
+
+    <div class="masthead">
+        <img class="masthead-logo" src="Linor_Lugasi_logo_eyebrow-removebg.png" alt="Lil by Linor">
+        <div class="masthead-title">קורס עיצוב גבות</div>
+        <div class="masthead-sub">מקצועי · מעשי · אישי</div>
+    </div>
+
+    <!-- HERO IMAGE -->
+    <div class="hero-wrap">
+        <img src="linor-photo.png" alt="לינור לוגסי">
+    </div>
+
+    <!-- ABOUT -->
+    <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">על הקורס</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+    <div class="about-text" id="aboutText">
+        קורס עיצוב גבות מקצועי עם לינור לוגסי — ליווי אישי, תרגול מעשי, וכלים אמיתיים לעבוד עם לקוחות מהיום הראשון.<br><br>
+        הקורס מתאים לכל מי שרוצה להתחיל קריירה בתחום היופי, להרחיב שירותים קיימים, או סתם ללמוד מהמקצועיות של לינור.
+    </div>
+
+    <!-- HIGHLIGHTS -->
+    <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">מה לומדים</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+    <div class="syllabus">
+        <div class="syllabus-item"><span class="syl-num">01</span><span class="syl-text">התאמת צורת הגבה למבנה הפנים והעיניים</span></div>
+        <div class="syllabus-item"><span class="syl-num">02</span><span class="syl-text">מיפוי גבות בצורה מקצועית וסימטרית</span></div>
+        <div class="syllabus-item"><span class="syl-num">03</span><span class="syl-text">עבודה עם פינצטה, שעווה, חוט ומספריים</span></div>
+        <div class="syllabus-item"><span class="syl-num">04</span><span class="syl-text">שיקום גבות דלילות ומילוי חוסרים</span></div>
+        <div class="syllabus-item"><span class="syl-num">05</span><span class="syl-text">טכניקות לעיצוב גבות טבעיות ומדויקות</span></div>
+        <div class="syllabus-item"><span class="syl-num">06</span><span class="syl-text">צביעת גבות והתאמת צבע נכון</span></div>
+        <div class="syllabus-item"><span class="syl-num">07</span><span class="syl-text">היגיינה וסטריליזציה בעבודה</span></div>
+        <div class="syllabus-item"><span class="syl-num">08</span><span class="syl-text">שימוש נכון בחומרים וכלי עבודה מקצועיים</span></div>
+        <div class="syllabus-item"><span class="syl-num">09</span><span class="syl-text">צילום לפני/אחרי ותוכן לרשתות חברתיות</span></div>
+        <div class="syllabus-item"><span class="syl-num">10</span><span class="syl-text">עבודה מעשית על מודליסטיות אמיתיות</span></div>
+        <div class="syllabus-item"><span class="syl-num">11</span><span class="syl-text">טיפים לשירות לקוחות ובניית עסק בתחום</span></div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">בוגרות הקורס</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+    <div class="gallery">
+        <div class="gallery-item"><img src="course-1.jpeg" alt="בוגרת קורס"></div>
+        <div class="gallery-item"><img src="course-2.jpeg" alt="בוגרת קורס"></div>
+        <div class="gallery-item"><img src="course-3.jpeg" alt="בוגרת קורס"></div>
+        <div class="gallery-item"><img src="course-4.jpeg" alt="בוגרת קורס"></div>
+        <div class="gallery-item"><img src="course-5.jpeg" alt="בוגרת קורס"></div>
+        <div class="gallery-item"><img src="course-6.jpeg" alt="בוגרת קורס"></div>
+    </div>
+
+    <!-- LEAD FORM -->
+    <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">השאירי פרטים</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+
+    <div class="success-box" id="successBox">
+        <div class="success-big">✦</div>
+        <div class="success-title">הפרטים התקבלו!</div>
+        <div class="success-text">לינור תחזור אלייך בהקדם<br>עם כל הפרטים על הקורס</div>
+    </div>
+
+    <div class="form-card" id="formCard">
+        <div class="form-title">מעוניינת בקורס?</div>
+        <div class="form-subtitle">השאירי שם וטלפון ולינור תחזור אלייך</div>
+        <div class="field">
+            <label>שם מלא</label>
+            <input type="text" id="leadName" placeholder="שם פרטי ומשפחה">
+        </div>
+        <div class="field">
+            <label>טלפון</label>
+            <input type="tel" id="leadPhone" placeholder="05X-XXXXXXX">
+        </div>
+        <button class="submit-btn" id="leadBtn" onclick="submitLead()">שלחי פרטים</button>
+    </div>
+
+    <div class="bottom-rule">
+        לינור לוגסי · עיצוב גבות מקצועי
+        <div style="margin-top:6px; font-size:10px; letter-spacing:2px; opacity:0.8;">
+            <a href="tel:0536660109" style="color:var(--sepia); text-decoration:none;">053-6660109</a>
+            &nbsp;·&nbsp; דרך התבלינים 11, אילת
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const SB_URL = 'https://xtvlutcitglsazifbtjs.supabase.co';
+    const SB_KEY = 'sb_publishable_JDOWlle5wosHvRA3RGfFYg_0moXfM-i';
+    const H = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+    async function submitLead() {
+        const name  = document.getElementById('leadName').value.trim();
+        const phone = document.getElementById('leadPhone').value.trim();
+        if (!name)  { alert('אנא הזיני שם'); return; }
+        if (!phone) { alert('אנא הזיני טלפון'); return; }
+
+        const btn = document.getElementById('leadBtn');
+        btn.disabled = true; btn.textContent = 'שולחת...';
+
+        try {
+            const r = await fetch(`${SB_URL}/rest/v1/course_leads`, {
+                method: 'POST',
+                headers: { ...H, 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ name, phone })
+            });
+            if (r.ok) {
+                document.getElementById('formCard').style.display = 'none';
+                document.getElementById('successBox').classList.add('show');
+            } else {
+                const err = await r.text().catch(() => '');
+                alert('שגיאה ' + r.status + ': ' + err);
+                btn.disabled = false; btn.textContent = 'שלחי פרטים';
+            }
+        } catch(e) {
+            alert('שגיאת רשת: ' + e.message);
+            btn.disabled = false; btn.textContent = 'שלחי פרטים';
+        }
+    }
+</script>
+</body>
+</html>

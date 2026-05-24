@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>קביעת תור | Lil by Linor</title>
+    <style>
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Regular.ttf') format('truetype'); font-weight:400; }
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Bold.ttf') format('truetype'); font-weight:700; }
+
+        :root {
+            --paper:#F0E4C0; --ink:#1A0C04; --ink-mid:#3D2210;
+            --sepia:#6B4418; --gold:#9B7530; --rule:#7A5420;
+        }
+        *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Miriam Libre','David',serif;
+            background:var(--paper); color:var(--ink);
+            min-height:100vh; padding:32px 16px 60px;
+        }
+        body::after {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity:0.045;
+        }
+        .wrapper { max-width:520px; margin:0 auto; }
+
+        /* back */
+        .back-btn { background:none; border:none; font-family:inherit; font-size:13px; color:var(--sepia); letter-spacing:1px; cursor:pointer; margin-bottom:20px; opacity:0.7; transition:opacity .2s; padding:0; }
+        .back-btn:hover { opacity:1; }
+
+        /* masthead */
+        .masthead { text-align:center; border-top:3px double var(--rule); border-bottom:3px double var(--rule); padding:14px 0 12px; margin-bottom:24px; position:relative; }
+        .masthead::before,.masthead::after { content:''; position:absolute; left:0; right:0; height:1px; background:var(--rule); opacity:.3; }
+        .masthead::before { top:5px; } .masthead::after { bottom:5px; }
+        .masthead-logo { width:72px; height:auto; margin:0 auto 8px; display:block; filter:drop-shadow(0 3px 8px rgba(100,60,10,.2)); }
+        .masthead-title { font-size:24px; font-weight:700; letter-spacing:3px; }
+        .masthead-sub { font-size:10px; letter-spacing:4px; color:var(--sepia); margin-top:5px; }
+
+        /* section divider */
+        .sdiv { display:flex; align-items:center; gap:8px; margin:20px 0 14px; }
+        .sdiv-line { flex:1; height:1px; background:var(--rule); opacity:.5; }
+        .sdiv-dot { width:4px; height:4px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
+        .sdiv-title { font-size:10px; letter-spacing:4px; color:var(--sepia); white-space:nowrap; padding:0 4px; }
+
+        /* calendar */
+        .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+        .cal-nav button { background:none; border:1px solid var(--rule); font-family:inherit; font-size:15px; color:var(--sepia); cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+        .cal-nav button:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+        .cal-month { font-size:15px; font-weight:700; letter-spacing:2px; color:var(--ink); }
+        .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid var(--rule); }
+        .cal-header { padding:7px 0; text-align:center; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--sepia); border-bottom:2px solid var(--rule); border-left:1px solid rgba(122,84,32,.2); }
+        .cal-header:first-child { border-left:none; }
+        .cal-day {
+            padding:10px 4px; text-align:center; cursor:pointer; font-size:13px; font-weight:700;
+            border-left:1px solid rgba(122,84,32,.2); border-bottom:1px solid rgba(122,84,32,.2);
+            min-height:40px; display:flex; align-items:center; justify-content:center; flex-direction:column;
+            transition:background .15s; position:relative;
+        }
+        .cal-day:nth-child(7n+1) { border-left:none; }
+        .cal-day.empty { cursor:default; }
+        .cal-day.past { opacity:.28; cursor:not-allowed; }
+        .cal-day.off { opacity:.28; cursor:not-allowed; }
+        .cal-day.available:hover { background:rgba(155,117,48,.1); }
+        .cal-day.selected { background:var(--ink); color:var(--paper); }
+        .cal-day.has-bookings::after { content:''; position:absolute; bottom:4px; width:4px; height:4px; background:var(--gold); border-radius:50%; }
+        .cal-day.selected.has-bookings::after { background:var(--paper); }
+
+        /* slots */
+        .slots-wrap { margin-top:4px; }
+        .slots-grid { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--rule); }
+        .slot { padding:10px 4px; text-align:center; font-family:inherit; font-size:13px; font-weight:700; color:var(--ink-mid); border-left:1px solid rgba(122,84,32,.25); border-bottom:1px solid rgba(122,84,32,.25); cursor:pointer; transition:background .15s; user-select:none; }
+        .slot:nth-child(4n+1) { border-left:none; }
+        .slot:nth-last-child(-n+4) { border-bottom:none; }
+        .slot:hover { background:rgba(155,117,48,.08); }
+        .slot.selected { background:var(--ink); color:var(--paper); }
+        .slot.booked { opacity:.28; cursor:not-allowed; text-decoration:line-through; }
+        .no-slots { text-align:center; padding:16px; font-size:13px; color:var(--sepia); letter-spacing:1px; border:1px solid var(--rule); }
+
+        /* services */
+        .services-list { border-top:2px solid var(--rule); border-bottom:1px solid var(--rule); margin-bottom:4px; }
+        .service-item { display:flex; align-items:center; justify-content:space-between; padding:12px 6px; cursor:pointer; border-bottom:1px solid rgba(122,84,32,.25); transition:background .15s; }
+        .service-item:last-child { border-bottom:none; }
+        .service-item:hover { background:rgba(155,117,48,.06); }
+        .service-item.selected { background:var(--ink); }
+        .service-item.selected .svc-name,.service-item.selected .svc-check { color:var(--paper); }
+        .svc-name { font-size:14px; font-weight:700; color:var(--ink); }
+        .svc-check { font-size:13px; color:var(--gold); opacity:0; transition:opacity .15s; }
+        .service-item.selected .svc-check { opacity:1; }
+
+        /* form */
+        .field { margin-bottom:16px; }
+        .field label { display:block; font-size:10px; letter-spacing:3px; color:var(--sepia); margin-bottom:6px; }
+        .field input,.field textarea { width:100%; background:transparent; border:none; border-bottom:1px solid var(--rule); padding:8px 2px; font-family:inherit; font-size:15px; color:var(--ink); outline:none; transition:border-color .2s; border-radius:0; }
+        .field input:focus,.field textarea:focus { border-bottom:2px solid var(--ink); }
+        .field input::placeholder,.field textarea::placeholder { color:rgba(61,34,16,.35); font-size:13px; }
+        .field textarea { resize:none; height:56px; line-height:1.5; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+        /* note + submit */
+        .note-box { border:1px solid rgba(122,84,32,.3); padding:10px 14px; font-size:12px; color:var(--sepia); line-height:1.7; margin:18px 0; text-align:center; }
+        .submit-btn { width:100%; background:var(--ink); color:var(--paper); border:2px solid var(--ink); padding:15px; font-family:inherit; font-size:15px; font-weight:700; letter-spacing:4px; cursor:pointer; transition:background .2s; }
+        .submit-btn:hover { background:var(--sepia); border-color:var(--sepia); }
+        .submit-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+        /* success */
+        .success-screen { display:none; text-align:center; padding:40px 20px; border:3px double var(--rule); }
+        .success-screen.show { display:block; }
+        .success-big { font-size:44px; color:var(--gold); margin-bottom:12px; }
+        .success-title { font-size:20px; font-weight:700; letter-spacing:2px; margin-bottom:8px; }
+        .success-text { font-size:13px; color:var(--sepia); line-height:1.8; }
+        .success-back { background:none; border:1px solid var(--rule); font-family:inherit; font-size:12px; letter-spacing:2px; color:var(--sepia); padding:10px 20px; cursor:pointer; margin-top:16px; transition:all .15s; }
+        .success-back:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+        .bottom-rule { border-top:3px double var(--rule); margin-top:28px; padding-top:10px; text-align:center; font-size:9px; letter-spacing:3px; color:var(--sepia); opacity:.6; }
+
+        /* loading */
+        .loading { text-align:center; padding:20px; font-size:12px; color:var(--sepia); letter-spacing:2px; }
+
+        @media(max-width:480px) {
+            body { padding:20px 14px 40px; }
+            .form-row { grid-template-columns:1fr; gap:0; }
+            .slots-grid { grid-template-columns:repeat(3,1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← חזרה</button>
+
+    <div class="masthead">
+        <img class="masthead-logo" src="Linor_Lugasi_logo_eyebrow-removebg.png" alt="Lil by Linor">
+        <div class="masthead-title">קביעת תור</div>
+        <div class="masthead-sub">לינור לוגסי · עיצוב גבות מקצועי · אילת</div>
+    </div>
+
+    <!-- Success screen -->
+    <div class="success-screen" id="successScreen">
+        <div class="success-big">✦</div>
+        <div class="success-title">התור נקבע בהצלחה!</div>
+        <div class="success-text" id="successDetails"></div>
+        <button class="success-back" onclick="resetForm()">קביעת תור נוסף</button>
+    </div>
+
+    <!-- Main form -->
+    <div id="mainForm">
+
+        <!-- STEP 1: Calendar -->
+        <div class="sdiv"><div class="sdiv-dot"></div><div class="sdiv-line"></div><span class="sdiv-title">בחרי תאריך</span><div class="sdiv-line"></div><div class="sdiv-dot"></div></div>
+
+        <div class="cal-nav">
+            <button onclick="prevMonth()">‹</button>
+            <span class="cal-month" id="calTitle"></span>
+            <button onclick="nextMonth()">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+
+        <!-- STEP 2: Time slots -->
+        <div id="slotsSection" style="display:none">
+            <div class="sdiv"><div class="sdiv-dot"></div><div class="sdiv-line"></div><span class="sdiv-title" id="slotsTitle">שעה</span><div class="sdiv-line"></div><div class="sdiv-dot"></div></div>
+            <div id="slotsContainer"></div>
+        </div>
+
+        <!-- STEP 3: Service + Form -->
+        <div id="formSection" style="display:none">
+            <div class="sdiv"><div class="sdiv-dot"></div><div class="sdiv-line"></div><span class="sdiv-title">בחרי טיפול</span><div class="sdiv-line"></div><div class="sdiv-dot"></div></div>
+            <div class="services-list">
+                <div class="service-item" data-service="עיצוב גבות חוט / שעווה" onclick="selectService(this)"><div class="svc-name">עיצוב גבות חוט / שעווה</div><span class="svc-check">✦</span></div>
+                <div class="service-item" data-service="הרמת ריסים" onclick="selectService(this)"><div class="svc-name">הרמת ריסים</div><span class="svc-check">✦</span></div>
+                <div class="service-item" data-service="הרמת גבות" onclick="selectService(this)"><div class="svc-name">הרמת גבות</div><span class="svc-check">✦</span></div>
+                <div class="service-item" data-service="איפור קבוע הצללה / מיקרובליידינג" onclick="selectService(this)"><div class="svc-name">איפור קבוע הצללה / מיקרובליידינג</div><span class="svc-check">✦</span></div>
+                <div class="service-item" data-service="פיגמנט שפתיים" onclick="selectService(this)"><div class="svc-name">פיגמנט שפתיים</div><span class="svc-check">✦</span></div>
+            </div>
+            <input type="hidden" id="selectedService">
+
+            <div class="sdiv" style="margin-top:20px"><div class="sdiv-dot"></div><div class="sdiv-line"></div><span class="sdiv-title">פרטים אישיים</span><div class="sdiv-line"></div><div class="sdiv-dot"></div></div>
+
+            <div class="form-row">
+                <div class="field"><label>שם פרטי *</label><input type="text" id="firstName" placeholder="מיכל" required></div>
+                <div class="field"><label>שם משפחה</label><input type="text" id="lastName" placeholder="כהן"></div>
+            </div>
+            <div class="field"><label>טלפון *</label><input type="tel" id="phone" placeholder="05X-XXXXXXX" required></div>
+            <div class="field"><label>הערות</label><textarea id="notes" placeholder="טיפול לראשונה? עור רגיש? כל פרט שחשוב..."></textarea></div>
+
+            <div class="note-box">ניתן לקבוע תור החל ממחר בלבד · אישור יישלח בווטסאפ</div>
+            <button class="submit-btn" id="submitBtn" onclick="submitBooking()">קביעת תור</button>
+        </div>
+
+    </div>
+
+    <div class="bottom-rule">
+        לינור לוגסי · עיצוב גבות מקצועי
+        <div style="margin-top:6px; font-size:10px; letter-spacing:2px; opacity:0.8;">
+            <a href="tel:0536660109" style="color:var(--sepia); text-decoration:none;">053-6660109</a>
+            &nbsp;·&nbsp;
+            דרך התבלינים 11, אילת
+        </div>
+    </div>
+</div>
+
+<script>
+const SB_URL = 'https://xtvlutcitglsazifbtjs.supabase.co';
+const SB_KEY = 'sb_publishable_JDOWlle5wosHvRA3RGfFYg_0moXfM-i';
+const H = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+const HE_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const HE_DAYS   = ['א','ב','ג','ד','ה','ו','ש'];
+
+let year, month, selectedDate = null, selectedTime = null, workingHours = [], monthBookings = {};
+
+async function init() {
+    const now = new Date(); year = now.getFullYear(); month = now.getMonth();
+    workingHours = await fetchWorkingHours();
+    renderCalendar();
+}
+
+async function fetchWorkingHours() {
+    try {
+        const r = await fetch(`${SB_URL}/rest/v1/working_hours?select=*`, { headers: H });
+        if (r.ok) {
+            const data = await r.json();
+            if (data && data.length > 0) return data;
+        }
+    } catch(e) {}
+    // ברירת מחדל — ראשון וחמישי סגור, שני-רביעי 9-19, שישי 9-17
+    return [
+        { day_of_week: 0, is_working: true,  start_hour: 9,  end_hour: 19 },
+        { day_of_week: 1, is_working: true,  start_hour: 9,  end_hour: 19 },
+        { day_of_week: 2, is_working: true,  start_hour: 9,  end_hour: 19 },
+        { day_of_week: 3, is_working: true,  start_hour: 9,  end_hour: 19 },
+        { day_of_week: 4, is_working: true,  start_hour: 9,  end_hour: 19 },
+        { day_of_week: 5, is_working: false, start_hour: 9,  end_hour: 17 },
+        { day_of_week: 6, is_working: false, start_hour: 9,  end_hour: 14 },
+    ];
+}
+
+async function fetchMonthBookings(y, m) {
+    const from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    const to   = `${y}-${String(m+1).padStart(2,'0')}-31`;
+    const r = await fetch(`${SB_URL}/rest/v1/bookings?booking_date=gte.${from}&booking_date=lte.${to}&status=eq.confirmed&select=booking_date,booking_time`, { headers: H });
+    if (!r.ok) return {};
+    const data = await r.json();
+    const map = {};
+    data.forEach(b => { if (!map[b.booking_date]) map[b.booking_date] = []; map[b.booking_date].push(b.booking_time.slice(0,5)); });
+    return map;
+}
+
+async function fetchDayData(dateStr) {
+    const [bookedR, blockedR] = await Promise.all([
+        fetch(`${SB_URL}/rest/v1/bookings?booking_date=eq.${dateStr}&status=eq.confirmed&select=booking_time`, { headers: H }),
+        fetch(`${SB_URL}/rest/v1/blocked_slots?blocked_date=eq.${dateStr}&select=blocked_time`, { headers: H })
+    ]);
+    const booked  = bookedR.ok  ? await bookedR.json()  : [];
+    const blocked = blockedR.ok ? await blockedR.json() : [];
+    return {
+        booked:  booked.map(b => b.booking_time.slice(0,5)),
+        blocked: blocked.map(b => b.blocked_time ? b.blocked_time.slice(0,5) : null)
+    };
+}
+
+async function renderCalendar() {
+    document.getElementById('calTitle').textContent = `${HE_MONTHS[month]} ${year}`;
+    monthBookings = await fetchMonthBookings(year, month);
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    HE_DAYS.forEach(d => { const h = document.createElement('div'); h.className='cal-header'; h.textContent=d; grid.appendChild(h); });
+
+    const today    = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+    const first    = new Date(year, month, 1);
+    const last     = new Date(year, month+1, 0);
+
+    for (let i = 0; i < first.getDay(); i++) {
+        const e = document.createElement('div'); e.className='cal-day empty'; grid.appendChild(e);
+    }
+
+    for (let d = 1; d <= last.getDate(); d++) {
+        const date = new Date(year, month, d);
+        const dateStr = toDateStr(date);
+        const dow = date.getDay();
+        const wh  = workingHours.find(w => w.day_of_week === dow);
+        const isPast   = date < tomorrow;
+        const isOff    = !wh || !wh.is_working;
+        const hasBooks = !!monthBookings[dateStr];
+
+        const el = document.createElement('div');
+        el.textContent = d;
+        let cls = 'cal-day';
+        if (isPast || isOff) cls += isPast ? ' past' : ' off';
+        else { cls += ' available'; if (hasBooks) cls += ' has-bookings'; }
+        if (dateStr === selectedDate) cls += ' selected';
+        el.className = cls;
+
+        if (!isPast && !isOff) el.onclick = () => pickDate(dateStr, date);
+        grid.appendChild(el);
+    }
+}
+
+async function pickDate(dateStr, dateObj) {
+    selectedDate = dateStr; selectedTime = null;
+    document.getElementById('formSection').style.display = 'none';
+    renderCalendar();
+
+    const dow = dateObj.getDay();
+    const wh  = workingHours.find(w => w.day_of_week === dow);
+    const sec = document.getElementById('slotsSection');
+    const ttl = document.getElementById('slotsTitle');
+    const con = document.getElementById('slotsContainer');
+    const hm  = HE_MONTHS[dateObj.getMonth()];
+    ttl.textContent = `שעה · ${dateObj.getDate()} ב${hm}`;
+    sec.style.display = 'block'; con.innerHTML = '<div class="loading">טוען שעות...</div>';
+    sec.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    const { booked, blocked } = await fetchDayData(dateStr);
+    const isDayBlocked = blocked.includes(null);
+
+    if (isDayBlocked || !wh) { con.innerHTML = '<div class="no-slots">יום זה חסום · אין אפשרות לקבוע תור</div>'; return; }
+
+    const slots = [];
+    for (let h = wh.start_hour; h < wh.end_hour; h++) slots.push(`${String(h).padStart(2,'0')}:00`);
+
+    const grid = document.createElement('div'); grid.className = 'slots-grid';
+    let hasAvail = false;
+    slots.forEach(t => {
+        const el = document.createElement('div');
+        el.className = 'slot' + (booked.includes(t) || blocked.includes(t) ? ' booked' : '');
+        el.textContent = t;
+        if (!booked.includes(t) && !blocked.includes(t)) {
+            hasAvail = true;
+            el.onclick = () => pickTime(t, el);
+        }
+        grid.appendChild(el);
+    });
+
+    con.innerHTML = '';
+    if (!hasAvail) { con.innerHTML = '<div class="no-slots">אין שעות פנויות ביום זה</div>'; return; }
+    con.appendChild(grid);
+}
+
+function pickTime(time, el) {
+    selectedTime = time;
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    const fs = document.getElementById('formSection');
+    fs.style.display = 'block';
+    fs.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function selectService(card) {
+    document.querySelectorAll('.service-item').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('selectedService').value = card.dataset.service;
+}
+
+async function submitBooking() {
+    const service = document.getElementById('selectedService').value;
+    const first   = document.getElementById('firstName').value.trim();
+    const phone   = document.getElementById('phone').value.trim();
+    if (!service)      { alert('אנא בחרי טיפול'); return; }
+    if (!first)        { alert('אנא הזיני שם פרטי'); return; }
+    if (!phone)        { alert('אנא הזיני מספר טלפון'); return; }
+    if (!selectedDate) { alert('אנא בחרי תאריך'); return; }
+    if (!selectedTime) { alert('אנא בחרי שעה'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'שולחת...';
+
+    const last  = document.getElementById('lastName').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+    const name  = last ? `${first} ${last}` : first;
+
+    try {
+        const r = await fetch(`${SB_URL}/rest/v1/bookings`, {
+            method: 'POST',
+            headers: { ...H, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ client_name: name, client_phone: phone, service, booking_date: selectedDate, booking_time: selectedTime, notes })
+        });
+
+        if (r.ok) {
+            const dateParts = selectedDate.split('-');
+            const dateDisp  = `${parseInt(dateParts[2])} ב${HE_MONTHS[parseInt(dateParts[1])-1]} ${dateParts[0]}`;
+            document.getElementById('successDetails').innerHTML = `<strong>${name}</strong><br>${service}<br>${dateDisp} · ${selectedTime}`;
+            document.getElementById('mainForm').style.display   = 'none';
+            document.getElementById('successScreen').classList.add('show');
+        } else {
+            const errText = await r.text().catch(() => '—');
+            alert('שגיאת שרת ' + r.status + ':\n' + errText);
+            btn.disabled = false; btn.textContent = 'קביעת תור';
+        }
+    } catch(e) {
+        alert('שגיאת רשת:\n' + e.message);
+        btn.disabled = false; btn.textContent = 'קביעת תור';
+    }
+}
+
+function resetForm() {
+    document.getElementById('mainForm').style.display   = 'block';
+    document.getElementById('successScreen').classList.remove('show');
+    document.getElementById('slotsSection').style.display = 'none';
+    document.getElementById('formSection').style.display  = 'none';
+    document.getElementById('firstName').value = '';
+    document.getElementById('lastName').value  = '';
+    document.getElementById('phone').value     = '';
+    document.getElementById('notes').value     = '';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').textContent = 'קביעת תור';
+    document.querySelectorAll('.service-item,.slot').forEach(e => e.classList.remove('selected'));
+    selectedDate = null; selectedTime = null;
+    renderCalendar();
+}
+
+function prevMonth() { month--; if (month < 0) { month = 11; year--; } selectedDate=null; renderCalendar(); document.getElementById('slotsSection').style.display='none'; document.getElementById('formSection').style.display='none'; }
+function nextMonth() { month++; if (month > 11) { month = 0;  year++; } selectedDate=null; renderCalendar(); document.getElementById('slotsSection').style.display='none'; document.getElementById('formSection').style.display='none'; }
+function toDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+init();
+</script>
+</body>
+</html>
