@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול | Lil by Linor</title>
+    <style>
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Regular.ttf') format('truetype'); font-weight:400; }
+        @font-face { font-family:'Miriam Libre'; src:url('fonts/Miriam_Libre/static/MiriamLibre-Bold.ttf') format('truetype'); font-weight:700; }
+
+        :root {
+            --paper:#F0E4C0; --ink:#1A0C04; --ink-mid:#3D2210;
+            --sepia:#6B4418; --gold:#9B7530; --rule:#7A5420;
+            --red:#8B2020; --green:#1A5C2A;
+        }
+        *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Miriam Libre','David',serif;
+            background:var(--paper); color:var(--ink);
+            min-height:100vh;
+        }
+        body::after {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity:0.045;
+        }
+
+        /* ─── LOGIN SCREEN ─────────────────────────────────────── */
+        #loginScreen {
+            position:fixed; inset:0;
+            display:flex; align-items:center; justify-content:center;
+            background:var(--paper); z-index:200;
+            transition:opacity .4s;
+        }
+        #loginScreen.hidden { opacity:0; pointer-events:none; }
+        .login-box {
+            width:min(360px,90vw);
+            border:3px double var(--rule);
+            padding:36px 32px 32px;
+            text-align:center;
+            position:relative;
+        }
+        .login-box::after {
+            content:''; position:absolute; inset:6px;
+            border:1px solid var(--rule); opacity:.35; pointer-events:none;
+        }
+        .login-logo { width:80px; margin:0 auto 10px; display:block; filter:drop-shadow(0 3px 8px rgba(100,60,10,.2)); }
+        .login-title { font-size:18px; font-weight:700; letter-spacing:3px; margin-bottom:4px; }
+        .login-sub { font-size:9px; letter-spacing:4px; color:var(--sepia); margin-bottom:28px; }
+        .login-field { margin-bottom:14px; text-align:right; }
+        .login-field label { font-size:10px; letter-spacing:3px; color:var(--sepia); display:block; margin-bottom:6px; }
+        .login-field input {
+            width:100%; border:1px solid var(--rule); background:rgba(240,228,192,.5);
+            font-family:inherit; font-size:14px; color:var(--ink);
+            padding:9px 12px; outline:none; transition:border-color .2s;
+        }
+        .login-field input:focus { border-color:var(--ink); }
+        .login-btn {
+            width:100%; margin-top:6px;
+            background:var(--ink); color:var(--paper);
+            border:none; font-family:inherit; font-size:13px;
+            letter-spacing:3px; padding:12px;
+            cursor:pointer; transition:background .2s;
+        }
+        .login-btn:hover { background:var(--sepia); }
+        .login-error { font-size:11px; color:var(--red); margin-top:10px; letter-spacing:1px; min-height:18px; }
+
+        /* ─── MAIN LAYOUT ──────────────────────────────────────── */
+        #mainScreen { display:none; min-height:100vh; }
+        #mainScreen.visible { display:block; }
+
+        /* top bar */
+        .topbar {
+            background:var(--ink); color:var(--paper);
+            padding:0 20px;
+            display:flex; align-items:center; justify-content:space-between;
+            height:50px; position:sticky; top:0; z-index:50;
+        }
+        .topbar-title { font-size:13px; letter-spacing:4px; }
+        .topbar-right { display:flex; align-items:center; gap:16px; }
+        .logout-btn {
+            background:none; border:1px solid rgba(240,228,192,.4);
+            color:var(--paper); font-family:inherit; font-size:10px;
+            letter-spacing:2px; padding:5px 12px; cursor:pointer;
+            transition:all .2s;
+        }
+        .logout-btn:hover { background:var(--paper); color:var(--ink); }
+
+        /* tabs */
+        .tabs {
+            display:flex; border-bottom:2px solid var(--rule);
+            background:var(--paper); position:sticky; top:50px; z-index:40;
+            overflow-x:auto;
+        }
+        .tab {
+            flex-shrink:0; padding:12px 20px;
+            font-size:11px; letter-spacing:2px; color:var(--sepia);
+            cursor:pointer; border-bottom:3px solid transparent;
+            transition:all .2s; white-space:nowrap;
+        }
+        .tab:hover { color:var(--ink); }
+        .tab.active { color:var(--ink); border-bottom-color:var(--ink); font-weight:700; }
+
+        /* content panels */
+        .panel { display:none; padding:24px 20px 60px; max-width:700px; margin:0 auto; }
+        .panel.active { display:block; }
+
+        /* section divider */
+        .sdiv { display:flex; align-items:center; gap:8px; margin:24px 0 16px; }
+        .sdiv-line { flex:1; height:1px; background:var(--rule); opacity:.5; }
+        .sdiv-dot { width:4px; height:4px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
+        .sdiv-title { font-size:10px; letter-spacing:4px; color:var(--sepia); white-space:nowrap; padding:0 4px; }
+
+        /* ─── BOOKINGS LIST ─────────────────────────────────────── */
+        .filters { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+        .filter-btn {
+            font-family:inherit; font-size:10px; letter-spacing:2px;
+            padding:6px 14px; border:1px solid var(--rule);
+            background:none; color:var(--sepia); cursor:pointer; transition:all .2s;
+        }
+        .filter-btn.active, .filter-btn:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+        .booking-card {
+            border:1px solid rgba(122,84,32,.4);
+            padding:16px; margin-bottom:12px;
+            position:relative; transition:border-color .2s;
+        }
+        .booking-card:hover { border-color:var(--rule); }
+        .booking-card.cancelled { opacity:.5; }
+        .booking-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+        .booking-name { font-size:15px; font-weight:700; }
+        .booking-badge {
+            font-size:9px; letter-spacing:2px; padding:3px 8px;
+            border:1px solid;
+        }
+        .booking-badge.confirmed { color:var(--green); border-color:var(--green); }
+        .booking-badge.cancelled { color:var(--red); border-color:var(--red); }
+        .booking-detail { font-size:11px; color:var(--sepia); letter-spacing:1px; margin-bottom:3px; }
+        .booking-actions { margin-top:10px; display:flex; gap:8px; }
+        .btn-cancel {
+            font-family:inherit; font-size:10px; letter-spacing:2px;
+            padding:5px 12px; border:1px solid var(--red); color:var(--red);
+            background:none; cursor:pointer; transition:all .2s;
+        }
+        .btn-cancel:hover { background:var(--red); color:var(--paper); }
+        .btn-restore {
+            font-family:inherit; font-size:10px; letter-spacing:2px;
+            padding:5px 12px; border:1px solid var(--green); color:var(--green);
+            background:none; cursor:pointer; transition:all .2s;
+        }
+        .btn-restore:hover { background:var(--green); color:var(--paper); }
+        .empty-state { text-align:center; padding:40px; color:var(--sepia); font-size:13px; letter-spacing:2px; }
+
+        /* ─── CALENDAR VIEW ─────────────────────────────────────── */
+        .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .cal-nav button {
+            background:none; border:1px solid var(--rule); font-family:inherit;
+            font-size:15px; color:var(--sepia); cursor:pointer;
+            width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+            transition:all .15s;
+        }
+        .cal-nav button:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+        .cal-month { font-size:16px; font-weight:700; letter-spacing:2px; }
+        .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid var(--rule); margin-bottom:20px; }
+        .cal-hdr {
+            padding:8px 0; text-align:center; font-size:10px; font-weight:700;
+            letter-spacing:1px; color:var(--sepia);
+            border-bottom:2px solid var(--rule); border-left:1px solid rgba(122,84,32,.2);
+        }
+        .cal-hdr:first-child { border-left:none; }
+        .cal-cell {
+            min-height:56px; padding:6px 4px 4px;
+            border-left:1px solid rgba(122,84,32,.2); border-bottom:1px solid rgba(122,84,32,.2);
+            cursor:pointer; transition:background .15s; position:relative;
+        }
+        .cal-cell:nth-child(7n+1) { border-left:none; }
+        .cal-cell.empty { cursor:default; }
+        .cal-cell.today { background:rgba(155,117,48,.08); }
+        .cal-cell:hover:not(.empty) { background:rgba(26,12,4,.05); }
+        .cal-cell.selected { background:rgba(26,12,4,.1); }
+        .cal-num { font-size:12px; font-weight:700; color:var(--ink); text-align:center; margin-bottom:4px; }
+        .cal-cell.empty .cal-num { opacity:0; }
+        .cal-dots { display:flex; flex-wrap:wrap; gap:2px; justify-content:center; }
+        .cal-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:var(--sepia); flex-shrink:0;
+        }
+        .cal-dot.cancelled-dot { background:var(--red); opacity:.5; }
+
+        /* day detail drawer */
+        .day-drawer {
+            border:1px solid var(--rule); padding:16px;
+            margin-top:0; background:rgba(240,228,192,.6);
+            display:none;
+        }
+        .day-drawer.open { display:block; }
+        .day-drawer-title { font-size:12px; letter-spacing:3px; color:var(--sepia); margin-bottom:12px; font-weight:700; }
+        .drawer-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(122,84,32,.2); font-size:12px; }
+        .drawer-item:last-child { border-bottom:none; }
+        .drawer-time { font-weight:700; color:var(--ink); min-width:50px; }
+        .drawer-info { flex:1; color:var(--sepia); letter-spacing:1px; padding:0 8px; }
+        .drawer-badge {
+            font-size:9px; letter-spacing:1px; padding:2px 7px; border:1px solid;
+        }
+        .drawer-badge.confirmed { color:var(--green); border-color:var(--green); }
+        .drawer-badge.cancelled { color:var(--red); border-color:var(--red); }
+
+        /* ─── BLOCK SLOTS ─────────────────────────────────────── */
+        .form-row { margin-bottom:14px; }
+        .form-label { font-size:10px; letter-spacing:3px; color:var(--sepia); display:block; margin-bottom:7px; }
+        .form-input {
+            width:100%; border:1px solid var(--rule); background:rgba(240,228,192,.5);
+            font-family:inherit; font-size:14px; color:var(--ink);
+            padding:9px 12px; outline:none; transition:border-color .2s;
+        }
+        .form-input:focus { border-color:var(--ink); }
+        .form-hint { font-size:10px; color:var(--sepia); letter-spacing:1px; margin-top:5px; opacity:.7; }
+        .btn-primary {
+            background:var(--ink); color:var(--paper); border:none;
+            font-family:inherit; font-size:12px; letter-spacing:3px;
+            padding:11px 28px; cursor:pointer; transition:background .2s;
+        }
+        .btn-primary:hover { background:var(--sepia); }
+        .btn-danger {
+            background:none; color:var(--red); border:1px solid var(--red);
+            font-family:inherit; font-size:10px; letter-spacing:2px;
+            padding:4px 10px; cursor:pointer; transition:all .2s;
+        }
+        .btn-danger:hover { background:var(--red); color:var(--paper); }
+
+        .blocked-list { margin-top:20px; }
+        .blocked-item {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border:1px solid rgba(122,84,32,.3); margin-bottom:8px;
+            font-size:12px;
+        }
+        .blocked-item-info { color:var(--sepia); letter-spacing:1px; }
+        .blocked-item-info strong { color:var(--ink); }
+
+        /* ─── WORKING HOURS ─────────────────────────────────────── */
+        .day-row {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 0; border-bottom:1px solid rgba(122,84,32,.2);
+        }
+        .day-row:last-child { border-bottom:none; }
+        .day-name { width:60px; font-size:12px; letter-spacing:2px; color:var(--sepia); flex-shrink:0; }
+        .toggle-wrap { flex-shrink:0; }
+        .toggle {
+            appearance:none; width:36px; height:20px;
+            background:rgba(122,84,32,.3); border-radius:10px;
+            position:relative; cursor:pointer; transition:background .2s;
+        }
+        .toggle:checked { background:var(--sepia); }
+        .toggle::after {
+            content:''; position:absolute; top:3px; right:3px;
+            width:14px; height:14px; border-radius:50%;
+            background:var(--paper); transition:right .2s;
+        }
+        .toggle:checked::after { right:19px; }
+        .hours-wrap { display:flex; align-items:center; gap:8px; flex:1; }
+        .hours-wrap.disabled { opacity:.3; pointer-events:none; }
+        .hour-select {
+            border:1px solid var(--rule); background:rgba(240,228,192,.5);
+            font-family:inherit; font-size:12px; color:var(--ink);
+            padding:5px 8px; outline:none; cursor:pointer;
+        }
+        .hours-sep { font-size:11px; color:var(--sepia); }
+        .save-hours-btn {
+            display:block; margin-top:20px;
+            background:var(--ink); color:var(--paper); border:none;
+            font-family:inherit; font-size:12px; letter-spacing:3px;
+            padding:12px 32px; cursor:pointer; transition:background .2s;
+        }
+        .save-hours-btn:hover { background:var(--sepia); }
+
+        /* ─── SETTINGS ─────────────────────────────────────── */
+        .settings-card {
+            border:1px solid rgba(122,84,32,.4); padding:20px 18px; margin-bottom:20px;
+        }
+        .settings-card-title { font-size:11px; letter-spacing:3px; color:var(--sepia); margin-bottom:14px; font-weight:700; }
+
+        /* ─── TOAST ─────────────────────────────────────── */
+        #toast {
+            position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+            background:var(--ink); color:var(--paper);
+            font-size:12px; letter-spacing:2px; padding:12px 24px;
+            z-index:1000; opacity:0; transition:opacity .3s; pointer-events:none;
+            white-space:nowrap;
+        }
+        #toast.show { opacity:1; }
+        #toast.error { background:var(--red); }
+
+        /* loading spinner */
+        .loading { text-align:center; padding:30px; color:var(--sepia); font-size:12px; letter-spacing:3px; }
+    </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══ LOGIN SCREEN ════════════════════════════════════════════════ -->
+<div id="loginScreen">
+    <div class="login-box">
+        <img class="login-logo" src="Linor_Lugasi_logo_eyebrow-removebg.png" alt="Lil by Linor">
+        <div class="login-title">ניהול</div>
+        <div class="login-sub">LIL BY LINOR · ADMIN</div>
+        <div class="login-field">
+            <label>שם משתמש</label>
+            <input type="text" id="usernameInput" placeholder="linor" autocomplete="username">
+        </div>
+        <div class="login-field">
+            <label>סיסמה</label>
+            <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="login-btn" onclick="doLogin()">כניסה</button>
+        <div class="login-error" id="loginError"></div>
+    </div>
+</div>
+
+<!-- ═══ MAIN SCREEN ════════════════════════════════════════════════ -->
+<div id="mainScreen">
+
+    <div class="topbar">
+        <span class="topbar-title">LIL BY LINOR · ניהול</span>
+        <div class="topbar-right">
+            <button class="logout-btn" onclick="doLogout()">יציאה</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="bookings" onclick="switchTab('bookings')">הזמנות</div>
+        <div class="tab" data-tab="calendar" onclick="switchTab('calendar')">יומן</div>
+        <div class="tab" data-tab="block" onclick="switchTab('block')">חסימת שעות</div>
+        <div class="tab" data-tab="hours" onclick="switchTab('hours')">שעות עבודה</div>
+        <div class="tab" data-tab="settings" onclick="switchTab('settings')">הגדרות</div>
+    </div>
+
+    <!-- ── BOOKINGS ── -->
+    <div class="panel active" id="panel-bookings">
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">רשימת הזמנות</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all', this)">הכל</button>
+            <button class="filter-btn" onclick="setFilter('upcoming', this)">קרובות</button>
+            <button class="filter-btn" onclick="setFilter('today', this)">היום</button>
+            <button class="filter-btn" onclick="setFilter('confirmed', this)">מאושרות</button>
+            <button class="filter-btn" onclick="setFilter('cancelled', this)">מבוטלות</button>
+        </div>
+        <div id="bookingsList"><div class="loading">טוען הזמנות...</div></div>
+    </div>
+
+    <!-- ── CALENDAR ── -->
+    <div class="panel" id="panel-calendar">
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">יומן חודשי</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+        <div class="cal-nav">
+            <button onclick="calMove(-1)">‹</button>
+            <span class="cal-month" id="calMonthLabel"></span>
+            <button onclick="calMove(1)">›</button>
+        </div>
+        <div class="cal-grid" id="adminCalGrid"></div>
+        <div class="day-drawer" id="dayDrawer"></div>
+    </div>
+
+    <!-- ── BLOCK SLOTS ── -->
+    <div class="panel" id="panel-block">
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">חסימת שעות וימים</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+        <div class="form-row">
+            <label class="form-label">תאריך לחסימה</label>
+            <input type="date" class="form-input" id="blockDate">
+        </div>
+        <div class="form-row">
+            <label class="form-label">שעה (ריק = כל היום)</label>
+            <input type="time" class="form-input" id="blockTime" step="1800" dir="ltr" style="text-align:right;">
+            <div class="form-hint">השאר ריק כדי לחסום את כל היום</div>
+        </div>
+        <button class="btn-primary" onclick="addBlock()">חסום</button>
+
+        <div class="sdiv" style="margin-top:28px"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">חסימות קיימות</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+        <div class="blocked-list" id="blockedList"><div class="loading">טוען...</div></div>
+    </div>
+
+    <!-- ── WORKING HOURS ── -->
+    <div class="panel" id="panel-hours">
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">שעות עבודה שבועיות</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+        <div id="hoursEditor"><div class="loading">טוען...</div></div>
+        <button class="save-hours-btn" onclick="saveHours()">שמור שינויים</button>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="panel" id="panel-settings">
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-dot"></div><span class="sdiv-title">הגדרות</span><div class="sdiv-dot"></div><div class="sdiv-line"></div></div>
+
+        <div class="settings-card">
+            <div class="settings-card-title">שינוי סיסמה</div>
+            <div class="form-row">
+                <label class="form-label">שם משתמש</label>
+                <input type="text" class="form-input" id="newUsername" placeholder="linor">
+            </div>
+            <div class="form-row">
+                <label class="form-label">סיסמה חדשה</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="••••••••">
+            </div>
+            <div class="form-row">
+                <label class="form-label">אישור סיסמה</label>
+                <input type="password" class="form-input" id="confirmPassword" placeholder="••••••••">
+            </div>
+            <button class="btn-primary" onclick="saveCredentials()">עדכן פרטי כניסה</button>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-card-title">מידע כללי</div>
+            <div style="font-size:12px; color:var(--sepia); letter-spacing:1px; line-height:2;">
+                <div>דף הזמנות: <a href="booking.html" style="color:var(--gold);" target="_blank">booking.html</a></div>
+                <div>דף ראשי: <a href="index.html" style="color:var(--gold);" target="_blank">index.html</a></div>
+            </div>
+        </div>
+    </div>
+
+<!-- ═══ COURSE LEADS POPUP ════════════════════════════════════════ -->
+<div id="leadsPopup" style="
+    display:none; position:fixed; inset:0; z-index:300;
+    background:rgba(26,12,4,.5); align-items:center; justify-content:center;">
+    <div style="
+        background:var(--paper); border:3px double var(--rule);
+        max-width:420px; width:90%; padding:28px 24px; position:relative;
+        max-height:80vh; overflow-y:auto;">
+        <div style="position:absolute; inset:6px; border:1px solid var(--rule); opacity:.25; pointer-events:none;"></div>
+        <div style="font-size:15px; font-weight:700; letter-spacing:3px; margin-bottom:4px; text-align:center;">פניות קורס חדשות</div>
+        <div style="font-size:10px; letter-spacing:3px; color:var(--sepia); text-align:center; margin-bottom:20px;" id="leadsPopupCount"></div>
+        <div id="leadsPopupList"></div>
+        <button onclick="closeLeadsPopup()" style="
+            display:block; width:100%; margin-top:18px;
+            background:var(--ink); color:var(--paper); border:none;
+            font-family:inherit; font-size:12px; letter-spacing:3px;
+            padding:11px; cursor:pointer;">סמני כנקראו וסגרי</button>
+    </div>
+</div>
+
+</div><!-- /mainScreen -->
+
+<script>
+    const SB_URL = 'https://xtvlutcitglsazifbtjs.supabase.co';
+    const SB_KEY = 'sb_publishable_JDOWlle5wosHvRA3RGfFYg_0moXfM-i';
+    const H = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+    const DAYS_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+    let allBookings = [];
+    let currentFilter = 'all';
+    let calYear, calMonth;
+    let calBookings = {};
+    let workingHoursData = {};
+    let selectedCalDay = null;
+
+    // ── helpers ─────────────────────────────────────────────────────
+    async function sb(path, opts={}) {
+        const r = await fetch(SB_URL + '/rest/v1/' + path, { headers: H, ...opts });
+        if (!r.ok) throw new Error(await r.text());
+        if (r.status === 204) return null;
+        return r.json();
+    }
+
+    function toast(msg, isError=false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'show' + (isError ? ' error' : '');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.className = '', 2800);
+    }
+
+    function fmtDate(d) {
+        // d is YYYY-MM-DD string
+        const [y,m,day] = d.split('-');
+        return `${day}.${m}.${y}`;
+    }
+    function fmtTime(t) { return t ? t.slice(0,5) : ''; }
+
+    function padDate(y,m,d) {
+        return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+
+    // ── LOGIN ────────────────────────────────────────────────────────
+    async function doLogin() {
+        const u = document.getElementById('usernameInput').value.trim();
+        const p = document.getElementById('passwordInput').value.trim();
+        document.getElementById('loginError').textContent = '';
+        if (!u || !p) { document.getElementById('loginError').textContent = 'אנא מלאי את כל השדות'; return; }
+
+        // ברירת מחדל — תמיד עובד
+        let adminUser = 'linor';
+        let adminPass = 'linor2025';
+
+        // נסה למשוך מ-Supabase (אם הוגדרה סיסמה חדשה)
+        try {
+            const data = await sb('settings?select=key,value');
+            if (data && data.length > 0) {
+                data.forEach(r => {
+                    if (r.key === 'admin_username') adminUser = r.value;
+                    if (r.key === 'admin_password') adminPass = r.value;
+                });
+            }
+        } catch(e) { /* ממשיכים עם ברירת מחדל */ }
+
+        if (u === adminUser && p === adminPass) {
+            sessionStorage.setItem('lbl_admin', '1');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.add('visible');
+            initMain();
+        } else {
+            document.getElementById('loginError').textContent = 'שם משתמש או סיסמה שגויים';
+        }
+    }
+
+    function doLogout() {
+        sessionStorage.removeItem('lbl_admin');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainScreen').classList.remove('visible');
+    }
+
+    // enter key on login
+    document.getElementById('passwordInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+    document.getElementById('usernameInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+    // auto-login if session exists
+    if (sessionStorage.getItem('lbl_admin')) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainScreen').classList.add('visible');
+        window.addEventListener('DOMContentLoaded', initMain);
+    }
+
+    // ── TABS ─────────────────────────────────────────────────────────
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+        if (name === 'bookings') loadBookings();
+        if (name === 'calendar') renderAdminCalendar();
+        if (name === 'block') loadBlocked();
+        if (name === 'hours') loadHours();
+        if (name === 'settings') loadSettingsTab();
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────
+    function initMain() {
+        const now = new Date();
+        calYear = now.getFullYear(); calMonth = now.getMonth();
+        loadBookings();
+        checkCourseLeads();
+    }
+
+    // ── COURSE LEADS POPUP ───────────────────────────────────────────
+    async function checkCourseLeads() {
+        try {
+            const leads = await sb('course_leads?is_read=eq.false&select=*&order=created_at.desc');
+            if (!leads || leads.length === 0) return;
+            document.getElementById('leadsPopupCount').textContent = leads.length + ' פניות שטרם טופלו';
+            document.getElementById('leadsPopupList').innerHTML = leads.map(l => `
+                <div style="padding:12px 0; border-bottom:1px solid rgba(122,84,32,.2); font-size:13px;">
+                    <div style="font-weight:700; margin-bottom:3px;">${l.name}</div>
+                    <div style="color:var(--sepia); letter-spacing:1px;">
+                        <a href="tel:${l.phone}" style="color:var(--sepia);">${l.phone}</a>
+                        <span style="font-size:10px; margin-right:8px; opacity:.6;">${new Date(l.created_at).toLocaleDateString('he-IL')}</span>
+                    </div>
+                </div>
+            `).join('');
+            const popup = document.getElementById('leadsPopup');
+            popup.style.display = 'flex';
+            window._unreadLeadIds = leads.map(l => l.id);
+        } catch(e) { /* טבלה עדיין לא קיימת */ }
+    }
+
+    async function closeLeadsPopup() {
+        document.getElementById('leadsPopup').style.display = 'none';
+        if (!window._unreadLeadIds || !window._unreadLeadIds.length) return;
+        try {
+            for (const id of window._unreadLeadIds) {
+                await sb(`course_leads?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ is_read: true }) });
+            }
+        } catch(e) {}
+    }
+
+    // ── BOOKINGS ─────────────────────────────────────────────────────
+    async function loadBookings() {
+        document.getElementById('bookingsList').innerHTML = '<div class="loading">טוען הזמנות...</div>';
+        try {
+            allBookings = await sb('bookings?select=*&order=booking_date.desc,booking_time.desc');
+            renderBookings();
+        } catch(e) { document.getElementById('bookingsList').innerHTML = '<div class="empty-state">שגיאה בטעינה</div>'; }
+    }
+
+    function setFilter(f, btn) {
+        currentFilter = f;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderBookings();
+    }
+
+    function renderBookings() {
+        const today = new Date().toISOString().slice(0,10);
+        let list = allBookings;
+        if (currentFilter === 'upcoming') list = list.filter(b => b.booking_date >= today && b.status !== 'cancelled');
+        else if (currentFilter === 'today') list = list.filter(b => b.booking_date === today);
+        else if (currentFilter === 'confirmed') list = list.filter(b => b.status === 'confirmed');
+        else if (currentFilter === 'cancelled') list = list.filter(b => b.status === 'cancelled');
+
+        if (!list.length) {
+            document.getElementById('bookingsList').innerHTML = '<div class="empty-state">אין הזמנות להצגה</div>';
+            return;
+        }
+        document.getElementById('bookingsList').innerHTML = list.map(b => `
+            <div class="booking-card ${b.status === 'cancelled' ? 'cancelled' : ''}" id="card-${b.id}">
+                <div class="booking-card-header">
+                    <span class="booking-name">${b.client_name}</span>
+                    <span class="booking-badge ${b.status}">${b.status === 'confirmed' ? 'מאושר' : 'בוטל'}</span>
+                </div>
+                <div class="booking-detail">📅 ${fmtDate(b.booking_date)} · ${fmtTime(b.booking_time)}</div>
+                <div class="booking-detail">💅 ${b.service}</div>
+                <div class="booking-detail">📞 ${b.client_phone}</div>
+                ${b.notes ? `<div class="booking-detail">📝 ${b.notes}</div>` : ''}
+                <div class="booking-actions">
+                    ${b.status === 'confirmed'
+                        ? `<button class="btn-cancel" onclick="cancelBooking('${b.id}')">בטל תור</button>`
+                        : `<button class="btn-restore" onclick="restoreBooking('${b.id}')">שחזר תור</button>`
+                    }
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function cancelBooking(id) {
+        if (!confirm('לבטל את התור?')) return;
+        try {
+            await sb(`bookings?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status: 'cancelled' }) });
+            const b = allBookings.find(x => x.id === id);
+            if (b) b.status = 'cancelled';
+            renderBookings();
+            toast('התור בוטל');
+        } catch(e) { toast('שגיאה בביטול', true); }
+    }
+
+    async function restoreBooking(id) {
+        try {
+            await sb(`bookings?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
+            const b = allBookings.find(x => x.id === id);
+            if (b) b.status = 'confirmed';
+            renderBookings();
+            toast('התור שוחזר');
+        } catch(e) { toast('שגיאה בשחזור', true); }
+    }
+
+    // ── CALENDAR ─────────────────────────────────────────────────────
+    async function renderAdminCalendar() {
+        document.getElementById('calMonthLabel').textContent = `${MONTHS_HE[calMonth]} ${calYear}`;
+        document.getElementById('dayDrawer').className = 'day-drawer';
+        selectedCalDay = null;
+
+        try {
+            const startDate = padDate(calYear, calMonth, 1);
+            const endDate = padDate(calYear, calMonth, 31);
+            const bks = await sb(`bookings?booking_date=gte.${startDate}&booking_date=lte.${endDate}&select=*&order=booking_time.asc`);
+
+            // group by date
+            calBookings = {};
+            bks.forEach(b => {
+                if (!calBookings[b.booking_date]) calBookings[b.booking_date] = [];
+                calBookings[b.booking_date].push(b);
+            });
+        } catch(e) { calBookings = {}; }
+
+        const grid = document.getElementById('adminCalGrid');
+        const DAY_NAMES = ['א','ב','ג','ד','ה','ו','ש'];
+        let html = DAY_NAMES.map(d => `<div class="cal-hdr">${d}</div>`).join('');
+
+        const firstDay = new Date(calYear, calMonth, 1).getDay();
+        const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+        const today = new Date().toISOString().slice(0,10);
+
+        for (let i=0; i<firstDay; i++) html += `<div class="cal-cell empty"><div class="cal-num">-</div></div>`;
+
+        for (let d=1; d<=daysInMonth; d++) {
+            const dateStr = padDate(calYear, calMonth, d);
+            const isToday = dateStr === today;
+            const dayBks = calBookings[dateStr] || [];
+            const dots = dayBks.slice(0,8).map(b =>
+                `<div class="cal-dot ${b.status==='cancelled'?'cancelled-dot':''}"></div>`
+            ).join('');
+            html += `
+                <div class="cal-cell ${isToday?'today':''} ${selectedCalDay===dateStr?'selected':''}" onclick="selectCalDay('${dateStr}', ${d})">
+                    <div class="cal-num">${d}</div>
+                    <div class="cal-dots">${dots}</div>
+                </div>`;
+        }
+        grid.innerHTML = html;
+    }
+
+    function selectCalDay(dateStr, day) {
+        selectedCalDay = dateStr;
+        // update selected style
+        document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+
+        const bks = calBookings[dateStr] || [];
+        const drawer = document.getElementById('dayDrawer');
+        if (!bks.length) {
+            drawer.className = 'day-drawer open';
+            drawer.innerHTML = `<div class="day-drawer-title">${day} ${MONTHS_HE[calMonth]} — אין הזמנות</div>`;
+            return;
+        }
+        const items = bks.map(b => `
+            <div class="drawer-item">
+                <span class="drawer-time">${fmtTime(b.booking_time)}</span>
+                <span class="drawer-info">${b.client_name} · ${b.service}</span>
+                <span class="drawer-badge ${b.status}">${b.status==='confirmed'?'מאושר':'בוטל'}</span>
+            </div>
+        `).join('');
+        drawer.className = 'day-drawer open';
+        drawer.innerHTML = `<div class="day-drawer-title">${day} ${MONTHS_HE[calMonth]} — ${bks.length} הזמנות</div>${items}`;
+    }
+
+    function calMove(dir) {
+        calMonth += dir;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        renderAdminCalendar();
+    }
+
+    // ── BLOCK SLOTS ──────────────────────────────────────────────────
+    async function loadBlocked() {
+        document.getElementById('blockedList').innerHTML = '<div class="loading">טוען...</div>';
+        // set min date to today
+        const today = new Date().toISOString().slice(0,10);
+        document.getElementById('blockDate').min = today;
+        try {
+            const blocks = await sb('blocked_slots?select=*&order=blocked_date.asc,blocked_time.asc');
+            renderBlocked(blocks);
+        } catch(e) { document.getElementById('blockedList').innerHTML = '<div class="empty-state">שגיאה בטעינה</div>'; }
+    }
+
+    function renderBlocked(blocks) {
+        if (!blocks.length) {
+            document.getElementById('blockedList').innerHTML = '<div class="empty-state">אין חסימות</div>';
+            return;
+        }
+        document.getElementById('blockedList').innerHTML = blocks.map(b => `
+            <div class="blocked-item">
+                <span class="blocked-item-info">
+                    <strong>${fmtDate(b.blocked_date)}</strong>
+                    ${b.blocked_time ? ' · ' + fmtTime(b.blocked_time) : ' · <em>כל היום</em>'}
+                </span>
+                <button class="btn-danger" onclick="removeBlock('${b.id}')">הסר</button>
+            </div>
+        `).join('');
+    }
+
+    async function addBlock() {
+        const date = document.getElementById('blockDate').value;
+        const time = document.getElementById('blockTime').value || null;
+        if (!date) { toast('בחרי תאריך', true); return; }
+        try {
+            await sb('blocked_slots', {
+                method: 'POST',
+                headers: { ...H, 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ blocked_date: date, blocked_time: time })
+            });
+            document.getElementById('blockDate').value = '';
+            document.getElementById('blockTime').value = '';
+            toast('החסימה נוספה');
+            loadBlocked();
+        } catch(e) { toast('שגיאה בהוספת חסימה', true); }
+    }
+
+    async function removeBlock(id) {
+        try {
+            await sb(`blocked_slots?id=eq.${id}`, { method: 'DELETE' });
+            toast('החסימה הוסרה');
+            loadBlocked();
+        } catch(e) { toast('שגיאה בהסרה', true); }
+    }
+
+    // ── WORKING HOURS ────────────────────────────────────────────────
+    async function loadHours() {
+        document.getElementById('hoursEditor').innerHTML = '<div class="loading">טוען...</div>';
+        try {
+            const rows = await sb('working_hours?select=*&order=day_of_week.asc');
+            workingHoursData = {};
+            rows.forEach(r => workingHoursData[r.day_of_week] = r);
+            renderHoursEditor();
+        } catch(e) { document.getElementById('hoursEditor').innerHTML = '<div class="empty-state">שגיאה בטעינה</div>'; }
+    }
+
+    function renderHoursEditor() {
+        const hours = Array.from({length:14}, (_,i) => i+7);
+        const opts = hours.map(h => `<option value="${h}">${String(h).padStart(2,'0')}:00</option>`).join('');
+
+        let html = '';
+        for (let d=0; d<7; d++) {
+            const row = workingHoursData[d] || { day_of_week:d, is_working:false, start_hour:9, end_hour:19 };
+            html += `
+                <div class="day-row" id="dayrow-${d}">
+                    <span class="day-name">${DAYS_HE[d]}</span>
+                    <div class="toggle-wrap">
+                        <input type="checkbox" class="toggle" id="tog-${d}" ${row.is_working?'checked':''}
+                            onchange="toggleDay(${d})">
+                    </div>
+                    <div class="hours-wrap ${row.is_working?'':'disabled'}" id="hwrap-${d}">
+                        <select class="hour-select" id="start-${d}" onchange="updateHour(${d})">
+                            ${hours.map(h => `<option value="${h}" ${h===row.start_hour?'selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}
+                        </select>
+                        <span class="hours-sep">עד</span>
+                        <select class="hour-select" id="end-${d}" onchange="updateHour(${d})">
+                            ${hours.map(h => `<option value="${h}" ${h===row.end_hour?'selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+        document.getElementById('hoursEditor').innerHTML = html;
+    }
+
+    function toggleDay(d) {
+        const isWorking = document.getElementById('tog-'+d).checked;
+        document.getElementById('hwrap-'+d).className = 'hours-wrap' + (isWorking ? '' : ' disabled');
+        workingHoursData[d].is_working = isWorking;
+    }
+
+    function updateHour(d) {
+        workingHoursData[d].start_hour = parseInt(document.getElementById('start-'+d).value);
+        workingHoursData[d].end_hour   = parseInt(document.getElementById('end-'+d).value);
+    }
+
+    async function saveHours() {
+        // sync UI state before save
+        for (let d=0; d<7; d++) {
+            if (!workingHoursData[d]) continue;
+            workingHoursData[d].is_working  = document.getElementById('tog-'+d).checked;
+            workingHoursData[d].start_hour  = parseInt(document.getElementById('start-'+d).value);
+            workingHoursData[d].end_hour    = parseInt(document.getElementById('end-'+d).value);
+        }
+        try {
+            for (let d=0; d<7; d++) {
+                const row = workingHoursData[d];
+                if (!row) continue;
+                await sb(`working_hours?day_of_week=eq.${d}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        is_working: row.is_working,
+                        start_hour: row.start_hour,
+                        end_hour:   row.end_hour
+                    })
+                });
+            }
+            toast('שעות העבודה נשמרו ✓');
+        } catch(e) { toast('שגיאה בשמירה', true); }
+    }
+
+    // ── SETTINGS ────────────────────────────────────────────────────
+    async function loadSettingsTab() {
+        try {
+            const data = await sb('settings?select=key,value');
+            const creds = {};
+            data.forEach(r => creds[r.key] = r.value);
+            document.getElementById('newUsername').value = creds.admin_username || '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } catch(e) {}
+    }
+
+    async function saveCredentials() {
+        const u = document.getElementById('newUsername').value.trim();
+        const p = document.getElementById('newPassword').value;
+        const c = document.getElementById('confirmPassword').value;
+        if (!u) { toast('אנא הזיני שם משתמש', true); return; }
+        if (p && p !== c) { toast('הסיסמאות אינן תואמות', true); return; }
+        try {
+            await sb(`settings?key=eq.admin_username`, { method:'PATCH', body: JSON.stringify({ value: u }) });
+            if (p) await sb(`settings?key=eq.admin_password`, { method:'PATCH', body: JSON.stringify({ value: p }) });
+            toast('פרטי הכניסה עודכנו ✓');
+        } catch(e) { toast('שגיאה בעדכון', true); }
+    }
+</script>
+</body>
+</html>
